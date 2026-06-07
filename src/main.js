@@ -159,6 +159,14 @@ document.querySelectorAll('.status-opt').forEach(btn => {
     document.querySelectorAll('.status-opt').forEach(b => b.style.background = 'transparent')
     btn.style.background = 'rgba(255,255,255,0.08)'
     window.playerStatus = btn.dataset.status
+
+    // ← อัปเดตสี nameplate ด้วย
+    const statusColor = window.playerStatus === 'busy' ? '#eab308'
+                      : window.playerStatus === 'away' ? '#ef4444'
+                      : '#22c55e'
+    if (playerNameplate) {
+      playerNameplate.setColor(statusColor)
+    }
   })
 })
 
