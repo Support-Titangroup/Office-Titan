@@ -188,6 +188,17 @@ function preload() {
   for (let i = 0; i < 8; i++)
     this.load.image(`body_walk${i}`, `/assets/characters/body/${char}/${prefix}_walk${i}.png`)
   this.load.image('body_kick', `/assets/characters/body/${char}/${prefix}_kick.png`)
+
+  // ← โหลด idle + walk ของทุก char ไว้ใช้แสดงคนอื่น
+  const chars = ['male', 'female', 'robot']
+  const prefixes = { male: 'character_malePerson', female: 'character_femalePerson', robot: 'character_robot' }
+  chars.forEach(c => {
+    const p = prefixes[c]
+    this.load.image(`idle_${c}`, `/assets/characters/body/${c}/${p}_idle.png`)
+    this.load.image(`kick_${c}`, `/assets/characters/body/${c}/${p}_kick.png`)
+    for (let i = 0; i < 8; i++)
+      this.load.image(`walk_${c}_${i}`, `/assets/characters/body/${c}/${p}_walk${i}.png`)
+  })
 }
 
 function create() {
@@ -237,41 +248,30 @@ function create() {
     if (id === uid) return
 
     if (!this.otherPlayers[id]) {
-      // หา texture key ตาม char ของคนนั้น
-      const prefix = p.char === 'male' ? 'character_malePerson'
-                   : p.char === 'female' ? 'character_femalePerson'
-                   : 'character_robot'
       const textureKey = `idle_${p.char}`
-
-      // โหลด texture ถ้ายังไม่มี
-      if (!this.textures.exists(textureKey)) {
-        this.load.image(textureKey, `/assets/characters/body/${p.char}/${prefix}_idle.png`)
-        this.load.once('complete', () => {
-          const sprite = this.add.image(p.x, p.y, textureKey).setScale(0.6).setDepth(5)
-          const label = this.add.text(p.x, p.y, p.name, {
-            fontSize: '12px', color: '#fff',
-            backgroundColor: '#e74c3c',
-            padding: { x: 6, y: 2 }
-          }).setDepth(10).setOrigin(0.5, 1)
-          this.otherPlayers[id] = { sprite, label }
-        })
-        this.load.start()
-      } else {
-        const sprite = this.add.image(p.x, p.y, textureKey).setScale(0.6).setDepth(5)
-        const label = this.add.text(p.x, p.y, p.name, {
-          fontSize: '12px', color: '#fff',
-          backgroundColor: '#e74c3c',
-          padding: { x: 6, y: 2 }
-        }).setDepth(10).setOrigin(0.5, 1)
-        this.otherPlayers[id] = { sprite, label }
-      }
+      const sprite = this.add.image(p.x, p.y, textureKey).setScale(0.6).setDepth(5)
+      const label = this.add.text(p.x, p.y, p.name, {
+        fontSize: '12px', color: '#fff',
+        backgroundColor: '#e74c3c',
+        padding: { x: 6, y: 2 }
+      }).setDepth(10).setOrigin(0.5, 1)
+      this.otherPlayers[id] = { sprite, label }
     } else {
       const op = this.otherPlayers[id]
       op.sprite.setPosition(p.x, p.y)
       op.sprite.setFlipX(p.flipX)
       op.label.setPosition(p.x, p.y - op.sprite.displayHeight / 2 - 8)
+
+      if (p.isKicking) {
+        op.sprite.setTexture(`kick_${p.char}`)
+      } else if (p.frame) {
+        const frameKey = p.frame === 'body_idle'
+          ? `idle_${p.char}`
+          : `walk_${p.char}_${p.frame.replace('body_walk', '')}`
+        if (this.textures.exists(frameKey)) op.sprite.setTexture(frameKey)
+      }
     }
-  })
+  })  // ← ปิด forEach ตรงนี้
 
   Object.keys(this.otherPlayers).forEach(id => {
     if (!data[id]) {
@@ -280,7 +280,7 @@ function create() {
       delete this.otherPlayers[id]
     }
   })
-})
+})  // ← ปิด onValue ตรงนี้
 // ฟัง chat messages
 onValue(ref(db, 'messages'), (snapshot) => {
   const data = snapshot.val() || {}
@@ -390,16 +390,18 @@ function update() {
 
   // ─── Sync position ───
   this.syncTimer++
-  if (this.syncTimer >= 6) {
-    this.syncTimer = 0
-    set(ref(db, `players/${window.currentUser.uid}`), {
-      name: window.playerName,
-      char: window.playerChar,
-      x: Math.round(this.player.x),
-      y: Math.round(this.player.y),
-      flipX: this.bodySprite.flipX
-    })
-  }
+if (this.syncTimer >= 6) {
+  this.syncTimer = 0
+  set(ref(db, `players/${window.currentUser.uid}`), {
+    name: window.playerName,
+    char: window.playerChar,
+    x: Math.round(this.player.x),
+    y: Math.round(this.player.y),
+    flipX: this.bodySprite.flipX,
+    frame: this.isWalking ? `body_walk${this.walkFrame}` : 'body_idle',  // ← เพิ่ม
+    isKicking: this.isKicking  // ← เพิ่ม
+  })
+}
   // sync bubble คนอื่น
 Object.values(this.otherPlayers).forEach(op => {
   if (op.bubble && op.bubbleBg && op.sprite) {
