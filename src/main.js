@@ -171,8 +171,8 @@ const config = {
   width: window.innerWidth - 220,
   height: window.innerHeight,
   backgroundColor: '#1a1a2e',
-  parent: 'app',              // ← เพิ่ม
-  dom: { createContainer: true },
+  parent: 'app',
+  // ❌ ลบ dom: { createContainer: true } ออก
   physics: { default: 'arcade', arcade: { debug: false } },
   scene: { preload, create, update }
 }
@@ -382,19 +382,13 @@ onValue(ref(db, 'messages'), (snapshot) => {
   this.keyK   = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K)
   this.cursors = this.input.keyboard.createCursorKeys()
 
-  playerNameplate = this.add.dom(0, 0, 'div', `
-  background: rgba(67,97,238,0.15);
-  border: 1px solid rgba(67,97,238,0.4);
-  border-radius: 20px;
-  padding: 4px 12px 4px 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: sans-serif;
-  white-space: nowrap;
-`, `<div style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;"></div>
-   <span style="font-size:12px;font-weight:500;color:white;">${window.playerName || 'คุณ'}</span>`)
-  .setDepth(10).setOrigin(0.5, 1)
+  playerNameplate = this.add.text(0, 0, `● ${window.playerName || 'คุณ'}`, {
+  fontSize: '12px',
+  color: '#22c55e',
+  backgroundColor: 'rgba(67,97,238,0.8)',
+  padding: { x: 8, y: 4 },
+  borderRadius: 20
+}).setDepth(10).setOrigin(0.5, 1)
 
   const input = document.getElementById('chat-input')
   const sendBtn = document.getElementById('chat-send')
