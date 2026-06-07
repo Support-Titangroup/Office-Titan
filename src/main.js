@@ -127,7 +127,42 @@ function launchGame() {
     </div>
   `
   document.body.appendChild(modal)
-  game = new Phaser.Game(config)
+  const statusPanel = document.createElement('div')
+statusPanel.style.cssText = `
+  position:fixed; top:10px; left:10px;
+  background:rgba(30,30,63,0.95); border:1px solid #333;
+  border-radius:12px; padding:10px;
+  font-family:sans-serif; z-index:50;
+  display:flex; flex-direction:column; gap:4px;
+`
+statusPanel.innerHTML = `
+  <div style="font-size:11px;color:#888;margin-bottom:4px;padding-bottom:6px;border-bottom:1px solid #333;">สถานะของคุณ</div>
+  <div class="status-opt" data-status="online" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.08);cursor:pointer;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
+    <span style="font-size:13px;color:white;">Online</span>
+  </div>
+  <div class="status-opt" data-status="busy" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#eab308;"></div>
+    <span style="font-size:13px;color:white;">Busy</span>
+  </div>
+  <div class="status-opt" data-status="away" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#ef4444;"></div>
+    <span style="font-size:13px;color:white;">Away</span>
+  </div>
+`
+document.body.appendChild(statusPanel)
+
+window.playerStatus = 'online'
+
+document.querySelectorAll('.status-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.status-opt').forEach(b => b.style.background = 'transparent')
+    btn.style.background = 'rgba(255,255,255,0.08)'
+    window.playerStatus = btn.dataset.status
+  })
+})
+
+game = new Phaser.Game(config)
 }
 
 // ─── Phaser Config ───
@@ -136,6 +171,7 @@ const config = {
   width: window.innerWidth - 220,
   height: window.innerHeight,
   backgroundColor: '#1a1a2e',
+  dom: { createContainer: true },  // ← เพิ่ม
   physics: { default: 'arcade', arcade: { debug: false } },
   scene: { preload, create, update }
 }
@@ -248,15 +284,22 @@ function create() {
     if (id === uid) return
 
     if (!this.otherPlayers[id]) {
-      const textureKey = `idle_${p.char}`
-      const sprite = this.add.image(p.x, p.y, textureKey).setScale(0.6).setDepth(5)
-      const label = this.add.text(p.x, p.y, p.name, {
-        fontSize: '12px', color: '#fff',
-        backgroundColor: '#e74c3c',
-        padding: { x: 6, y: 2 }
-      }).setDepth(10).setOrigin(0.5, 1)
-      this.otherPlayers[id] = { sprite, label }
-    } else {
+  const textureKey = `idle_${p.char}`
+  const sprite = this.add.image(p.x, p.y, textureKey).setScale(0.6).setDepth(5)
+  
+  // ← แก้ตรงนี้ ใช้ status color
+  const statusColor = p.status === 'busy' ? '#eab308'
+                    : p.status === 'away' ? '#ef4444'
+                    : '#22c55e'
+  const label = this.add.text(p.x, p.y, `● ${p.name}`, {
+    fontSize: '12px',
+    color: statusColor,
+    backgroundColor: 'rgba(30,30,63,0.85)',
+    padding: { x: 8, y: 4 }
+  }).setDepth(10).setOrigin(0.5, 1)
+  
+  this.otherPlayers[id] = { sprite, label }
+} else {
       const op = this.otherPlayers[id]
       op.sprite.setPosition(p.x, p.y)
       op.sprite.setFlipX(p.flipX)
@@ -336,9 +379,19 @@ onValue(ref(db, 'messages'), (snapshot) => {
   this.keyK   = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K)
   this.cursors = this.input.keyboard.createCursorKeys()
 
-  playerNameplate = this.add.text(0, 0, window.playerName || 'คุณ', {
-    fontSize: '12px', color: '#ffffff', backgroundColor: '#4361ee', padding: { x: 6, y: 2 }
-  }).setDepth(10).setOrigin(0.5, 1)
+  playerNameplate = this.add.dom(0, 0, 'div', `
+  background: rgba(67,97,238,0.15);
+  border: 1px solid rgba(67,97,238,0.4);
+  border-radius: 20px;
+  padding: 4px 12px 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: sans-serif;
+  white-space: nowrap;
+`, `<div style="width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;"></div>
+   <span style="font-size:12px;font-weight:500;color:white;">${window.playerName || 'คุณ'}</span>`)
+  .setDepth(10).setOrigin(0.5, 1)
 
   const input = document.getElementById('chat-input')
   const sendBtn = document.getElementById('chat-send')
@@ -399,7 +452,8 @@ if (this.syncTimer >= 6) {
     y: Math.round(this.player.y),
     flipX: this.bodySprite.flipX,
     frame: this.isWalking ? `body_walk${this.walkFrame}` : 'body_idle',  // ← เพิ่ม
-    isKicking: this.isKicking  // ← เพิ่ม
+    isKicking: this.isKicking,  // ← เพิ่ม
+    status: window.playerStatus  // ← เพิ่ม
   })
 }
   // sync bubble คนอื่น
