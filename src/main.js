@@ -384,10 +384,9 @@ onValue(ref(db, 'messages'), (snapshot) => {
 
   playerNameplate = this.add.text(0, 0, `● ${window.playerName || 'คุณ'}`, {
   fontSize: '12px',
-  color: '#22c55e',
-  backgroundColor: 'rgba(67,97,238,0.8)',
-  padding: { x: 8, y: 4 },
-  borderRadius: 20
+  color: '#ffffff',
+  backgroundColor: '#4361ee',
+  padding: { x: 8, y: 4 }
 }).setDepth(10).setOrigin(0.5, 1)
 
   const input = document.getElementById('chat-input')
