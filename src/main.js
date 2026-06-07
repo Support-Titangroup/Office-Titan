@@ -162,11 +162,12 @@ document.querySelectorAll('.status-opt').forEach(btn => {
 
     // ← อัปเดตสี nameplate ด้วย
     const statusColor = window.playerStatus === 'busy' ? '#eab308'
-                      : window.playerStatus === 'away' ? '#ef4444'
-                      : '#22c55e'
-    if (playerNameplate) {
-      playerNameplate.setColor(statusColor)
-    }
+                  : window.playerStatus === 'away' ? '#ef4444'
+                  : '#22c55e'
+if (playerNameplate) {
+  playerNameplate.setColor(statusColor)
+  playerNameplate.setText(`● ${window.playerName || 'คุณ'}`)
+}
   })
 })
 
