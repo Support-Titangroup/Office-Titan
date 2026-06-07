@@ -171,7 +171,8 @@ const config = {
   width: window.innerWidth - 220,
   height: window.innerHeight,
   backgroundColor: '#1a1a2e',
-  dom: { createContainer: true },  // ← เพิ่ม
+  parent: 'app',              // ← เพิ่ม
+  dom: { createContainer: true },
   physics: { default: 'arcade', arcade: { debug: false } },
   scene: { preload, create, update }
 }
@@ -259,12 +260,14 @@ function create() {
   this.objects.forEach(obj => {
     const body = this.officeObjects.create(obj.x, obj.y, null)
     body.setSize(32, 32); body.setVisible(false); body.refreshBody()
-    const box = this.add.rectangle(obj.x, obj.y, 64, 64, 0x2a2a5a).setStrokeStyle(2, 0x4361ee).setInteractive({ cursor: 'pointer' })
+    const box = this.add.rectangle(obj.x, obj.y, 64, 64, 0x2a2a5a)
+  .setStrokeStyle(2, 0x4361ee)
+  .setInteractive({ cursor: 'pointer' })
     this.add.text(obj.x, obj.y - 8, obj.emoji, { fontSize: '24px' }).setOrigin(0.5)
     this.add.text(obj.x, obj.y + 22, obj.label, { fontSize: '10px', color: '#aaa' }).setOrigin(0.5)
     box.on('pointerdown', () => openModal(obj.type))
-    box.on('pointerover', () => box.setFillColor(0x3a3a7a))
-    box.on('pointerout',  () => box.setFillColor(0x2a2a5a))
+    box.on('pointerover', () => { box.fillColor = 0x3a3a7a })
+    box.on('pointerout',  () => { box.fillColor = 0x2a2a5a })
   })
 
   const px = 300, py = 400
