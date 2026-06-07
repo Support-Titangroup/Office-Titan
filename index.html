@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>my-office</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="login-screen" style="
+  position:fixed; inset:0; background:#1a1a2e;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-family:sans-serif; z-index:999;
+">
+  <h1 style="color:white; font-size:28px; margin-bottom:8px;">🏢 My Virtual Office</h1>
+  <p style="color:#aaa; margin-bottom:32px;">เข้าสู่ระบบเพื่อเริ่มต้น</p>
+  <button id="login-btn" style="
+    background:#4361ee; color:white; border:none;
+    padding:14px 32px; border-radius:10px;
+    font-size:16px; cursor:pointer; display:flex;
+    align-items:center; gap:10px;
+  ">
+    <img src="https://www.google.com/favicon.ico" width="20">
+    เข้าสู่ระบบด้วย Google
+  </button>
+</div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
