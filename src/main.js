@@ -234,7 +234,7 @@ function preload() {
   for (let i = 0; i < 8; i++)
     this.load.image(`body_walk${i}`, `/assets/characters/body/${char}/${prefix}_walk${i}.png`)
   this.load.image('body_kick', `/assets/characters/body/${char}/${prefix}_kick.png`)
-
+  this.load.audio('hit', '/assets/sounds/kick_sound.mp3')
   // ← โหลด idle + walk ของทุก char ไว้ใช้แสดงคนอื่น
   const chars = ['male', 'female', 'robot']
   const prefixes = { male: 'character_malePerson', female: 'character_femalePerson', robot: 'character_robot' }
@@ -470,6 +470,44 @@ Object.values(this.otherPlayers).forEach(op => {
     op.bubble.setPosition(bx + 2, by + 2)
   }
 })
+// ใน update() เพิ่มบรรทัดนี้ต่อจาก setPosition
+const currentStatusColor = window.playerStatus === 'busy' ? '#eab308'
+                          : window.playerStatus === 'away' ? '#ef4444'
+                          : '#22c55e'
+playerNameplate.setColor(currentStatusColor)
+
+// เช็ค kick collision
+if (this.isKicking) {
+  Object.entries(this.otherPlayers).forEach(([id, op]) => {
+    if (!op.sprite) return
+    const dist = Phaser.Math.Distance.Between(
+      this.player.x, this.player.y,
+      op.sprite.x, op.sprite.y
+    )
+    if (dist < 80 && !op.bumped) {
+      op.bumped = true
+
+      // แสดงหัวโน
+      const bump = this.add.text(
+        op.sprite.x, op.sprite.y - op.sprite.displayHeight / 2 - 20,
+        '💥', { fontSize: '24px' }
+      ).setDepth(20).setOrigin(0.5)
+
+      // เสียง
+      // (ใส่ในส่วน preload ก่อน แล้วเรียกตรงนี้)
+      this.sound.play('hit')
+
+      // ลบหลัง 1.5 วิ
+      this.time.delayedCall(1500, () => {
+        bump.destroy()
+        op.bumped = false
+      })
+    }
+  })
+} else {
+  // reset bumped เมื่อไม่ kick
+  Object.values(this.otherPlayers).forEach(op => { op.bumped = false })
+}
 }
 
 // ─── Mock Data ───
